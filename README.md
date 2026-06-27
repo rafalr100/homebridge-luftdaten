@@ -1,3 +1,5 @@
+<img src="docs/icon.png" align="right" width="104" alt="homebridge-luftdaten icon">
+
 # homebridge-luftdaten
 
 Bring your [Luftdaten / Sensor.Community](https://sensor.community/) air-quality
