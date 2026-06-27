@@ -72,18 +72,41 @@ there is no native HomeKit characteristic for barometric pressure.
 
 ## Installation
 
-Via the Homebridge UI: search for **homebridge-luftdaten** on the Plugins tab
-and install it. Or from the command line:
+There are two ways to install the plugin.
+
+### Option A — from npm / Homebridge UI (recommended)
+
+The easy route. In the **Homebridge UI** open the **Plugins** tab, search for
+`luftdaten`, and click **Install**. Then click **Settings** (⚙️) and fill in the
+form — no manual JSON editing needed. Updates appear automatically in the UI.
+
+Or from the command line:
 
 ```bash
 npm install -g homebridge-luftdaten
 ```
 
+### Option B — from GitHub (manual)
+
+Installs the latest `main` straight from this repository. Requires `git` on the
+host. Run it with sufficient privileges (or as root):
+
+```bash
+hb-service add https://github.com/rafalr100/homebridge-luftdaten
+# no git on the host? install from the tarball instead:
+# hb-service add https://github.com/rafalr100/homebridge-luftdaten/archive/refs/heads/main.tar.gz
+```
+
+With this route the Homebridge UI **won't** show update notifications — to update,
+re-run the same command. Configuration works the same as Option A (the Settings
+form still appears), or you can edit `config.json` by hand (see below).
+
 A full, step-by-step walkthrough is in **[INSTALL.md](INSTALL.md)**.
 
 ## Configuration
 
-Add an entry to the `accessories` array of your Homebridge `config.json`:
+Configure it from the **Settings** form in the Homebridge UI, or add an entry to
+the `accessories` array of your `config.json` manually:
 
 ```json
 {
@@ -128,6 +151,10 @@ poll →  │  GET localUrl (priority)  │ ── ok ──►  parse  ─┐
         │  …/v1/sensor/<id>/       │
         └──────────────────────────┘
 ```
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the version history.
 
 ## Development
 

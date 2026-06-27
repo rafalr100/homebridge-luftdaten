@@ -55,6 +55,7 @@
     "config.sample.json",
     "README.md",
     "INSTALL.md",
+    "CHANGELOG.md",
     "LICENSE"
   ]
 }
