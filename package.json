@@ -1,0 +1,44 @@
+{
+  "name": "homebridge-luftdaten",
+  "version": "1.0.0",
+  "description": "Homebridge accessory plugin for Luftdaten / Sensor.Community (airrohr) air quality sensors, with local-first reading and cloud fallback.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/index.js"
+  },
+  "keywords": [
+    "homebridge-plugin",
+    "luftdaten",
+    "sensor.community",
+    "airrohr",
+    "air-quality",
+    "sds011",
+    "sht3x",
+    "bme280",
+    "particulate-matter",
+    "homekit"
+  ],
+  "engines": {
+    "homebridge": ">=1.6.0",
+    "node": ">=18.0.0"
+  },
+  "author": "Rafał Rudecki",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rafalr100/homebridge-luftdaten.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rafalr100/homebridge-luftdaten/issues"
+  },
+  "homepage": "https://github.com/rafalr100/homebridge-luftdaten#readme",
+  "files": [
+    "src/",
+    "docs/",
+    "config.sample.json",
+    "README.md",
+    "INSTALL.md",
+    "LICENSE"
+  ]
+}
