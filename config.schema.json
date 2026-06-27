@@ -6,12 +6,12 @@
   "footerDisplay": "See the [README](https://github.com/rafalr100/homebridge-luftdaten) for details. Pressure is logged but not exposed to HomeKit.",
   "schema": {
     "type": "object",
+    "required": ["name"],
     "properties": {
       "name": {
         "title": "Platform Name",
         "type": "string",
         "default": "Luftdaten",
-        "required": true,
         "description": "Name for this platform (shown in the Homebridge logs)."
       },
       "sensors": {
@@ -19,12 +19,12 @@
         "type": "array",
         "items": {
           "type": "object",
+          "required": ["name"],
           "properties": {
             "name": {
               "title": "Name",
               "type": "string",
               "default": "Luftdaten",
-              "required": true,
               "description": "Name shown in the Home app."
             },
             "localUrl": {
