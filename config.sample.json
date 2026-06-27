@@ -1,13 +1,18 @@
 {
-  "accessories": [
+  "platforms": [
     {
-      "accessory": "Luftdaten",
-      "name": "<NAME_IN_HOMEKIT>",
-      "localUrl": "http://192.168.1.50/data.json",
-      "sensorId": "<SDS011_SENSOR_ID>",
-      "pollInterval": 120,
-      "requestTimeout": 10,
-      "hasTempSensor": true
+      "platform": "Luftdaten",
+      "name": "Luftdaten",
+      "sensors": [
+        {
+          "name": "<NAME_IN_HOMEKIT>",
+          "localUrl": "http://192.168.1.50/data.json",
+          "sensorId": "<SDS011_SENSOR_ID>",
+          "pollInterval": 120,
+          "requestTimeout": 10,
+          "hasTempSensor": true
+        }
+      ]
     }
   ]
 }

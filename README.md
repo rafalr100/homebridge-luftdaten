@@ -15,9 +15,10 @@ sensor into Apple HomeKit — local-first, with an automatic cloud fallback.
 
 ---
 
-A Homebridge **accessory** plugin that exposes a Luftdaten / Sensor.Community
-sensor (airrohr firmware — typically an **SDS011** particulate sensor plus an
-**SHT3X** or **BME280** temperature/humidity sensor) to Apple HomeKit.
+A Homebridge **dynamic platform** plugin that exposes one or more Luftdaten /
+Sensor.Community sensors (airrohr firmware — typically an **SDS011** particulate
+sensor plus an **SHT3X** or **BME280** temperature/humidity sensor) to Apple
+HomeKit.
 
 It reads **locally first** from the sensor's own `data.json` endpoint and
 **falls back to the Sensor.Community cloud** when the local device is
@@ -31,6 +32,7 @@ and `AbortController` for timeouts.
 - 🌫️ Air quality (1–5) derived from PM2.5 using WHO/EU thresholds, plus raw
   PM2.5 and PM10 density.
 - 🌡️ Temperature and humidity (optional, on by default).
+- 🧩 Dynamic platform — add as many sensors as you like under one config block.
 - 🔄 Configurable polling interval and request timeout.
 - 🚦 Surfaces "No Response" in HomeKit when the sensor can't be reached.
 - 📦 No runtime dependencies.
@@ -109,20 +111,26 @@ A full, step-by-step walkthrough is in **[INSTALL.md](INSTALL.md)**.
 
 ## Configuration
 
-Configure it from the **Settings** form in the Homebridge UI, or add an entry to
-the `accessories` array of your `config.json` manually:
+Configure it from the **Settings** form in the Homebridge UI, or add a platform
+block to your `config.json` manually. Add one entry per sensor to the `sensors`
+array:
 
 ```json
 {
-  "accessories": [
+  "platforms": [
     {
-      "accessory": "Luftdaten",
-      "name": "Living Room Air",
-      "localUrl": "http://192.168.1.50/data.json",
-      "sensorId": "12345",
-      "pollInterval": 120,
-      "requestTimeout": 10,
-      "hasTempSensor": true
+      "platform": "Luftdaten",
+      "name": "Luftdaten",
+      "sensors": [
+        {
+          "name": "Living Room Air",
+          "localUrl": "http://192.168.1.50/data.json",
+          "sensorId": "12345",
+          "pollInterval": 120,
+          "requestTimeout": 10,
+          "hasTempSensor": true
+        }
+      ]
     }
   ]
 }
@@ -130,17 +138,22 @@ the `accessories` array of your `config.json` manually:
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `accessory` | string | — | Must be `"Luftdaten"`. |
-| `name` | string | `"Luftdaten"` | Name shown in the Home app. |
-| `localUrl` | string | — | Local sensor endpoint, e.g. `http://192.168.1.50/data.json`. Tried first. |
-| `sensorId` | string/number | — | Sensor.Community sensor ID, used for the cloud fallback. |
-| `pollInterval` | number | `120` | Seconds between reads (min 10). |
-| `requestTimeout` | number | `10` | Per-request timeout in seconds (min 1). |
-| `hasTempSensor` | boolean | `true` | Add temperature + humidity services. |
-| `hasBME280` | boolean | — | **Deprecated** alias for `hasTempSensor`, kept for backward compatibility. |
+| `platform` | string | — | Must be `"Luftdaten"`. |
+| `name` | string | `"Luftdaten"` | Platform name (shown in the logs). |
+| `sensors[].name` | string | `"Luftdaten"` | Name shown in the Home app. |
+| `sensors[].localUrl` | string | — | Local sensor endpoint, e.g. `http://192.168.1.50/data.json`. Tried first. |
+| `sensors[].sensorId` | string/number | — | Sensor.Community sensor ID, used for the cloud fallback. |
+| `sensors[].pollInterval` | number | `120` | Seconds between reads (min 10). |
+| `sensors[].requestTimeout` | number | `10` | Per-request timeout in seconds (min 1). |
+| `sensors[].hasTempSensor` | boolean | `true` | Add temperature + humidity services. |
+| `sensors[].hasBME280` | boolean | — | **Deprecated** alias for `hasTempSensor`, kept for backward compatibility. |
 
-At least one of `localUrl` or `sensorId` must be set. If both are present, the
-local URL is used and the cloud is only contacted when the local read fails.
+Each sensor needs at least one of `localUrl` or `sensorId`. If both are present,
+the local URL is used and the cloud is only contacted when the local read fails.
+
+> **Upgrading from v1.x?** v2 is a **dynamic platform**. Move your old `accessories`
+> entry into a `platforms` block as shown above (wrap your settings in a `sensors`
+> array, and change `"accessory": "Luftdaten"` to `"platform": "Luftdaten"`).
 
 ## How it works
 

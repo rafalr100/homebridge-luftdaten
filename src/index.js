@@ -3,16 +3,16 @@
 /**
  * homebridge-luftdaten
  *
- * Accessory plugin reading air-quality data from a Luftdaten / Sensor.Community
- * (airrohr firmware) sensor. Reads locally first (e.g. http://<ip>/data.json)
- * and falls back to the Sensor.Community cloud API.
+ * Dynamic platform plugin reading air-quality data from one or more Luftdaten /
+ * Sensor.Community (airrohr firmware) sensors. Each sensor is read locally first
+ * (e.g. http://<ip>/data.json) and falls back to the Sensor.Community cloud API.
  *
  * Zero external dependencies — uses the built-in global `fetch` (Node 18+)
  * together with AbortController for request timeouts.
  */
 
 const PLUGIN_NAME = 'homebridge-luftdaten';
-const ACCESSORY_NAME = 'Luftdaten';
+const PLATFORM_NAME = 'Luftdaten';
 
 // HomeKit AirQuality characteristic values (HAP enum).
 const AIR_QUALITY = {
@@ -122,7 +122,17 @@ function clampDensity(value) {
   return Math.min(DENSITY_MAX, Math.max(DENSITY_MIN, value));
 }
 
-class LuftdatenAccessory {
+function fmt(value) {
+  return value === null || value === undefined || Number.isNaN(value)
+    ? 'n/a'
+    : value;
+}
+
+/**
+ * Dynamic platform — owns the set of configured sensors and their cached
+ * PlatformAccessory objects.
+ */
+class LuftdatenPlatform {
   constructor(log, config, api) {
     this.log = log;
     this.config = config || {};
@@ -132,28 +142,94 @@ class LuftdatenAccessory {
     this.Characteristic = api.hap.Characteristic;
     this.hap = api.hap;
 
-    this.name = this.config.name || ACCESSORY_NAME;
-    this.localUrl = this.config.localUrl || null;
+    this.accessories = new Map(); // UUID -> cached PlatformAccessory
+    this.handlers = []; // keep sensor handlers (and their timers) alive
+
+    this.api.on('didFinishLaunching', () => this.discoverDevices());
+  }
+
+  /** Called by Homebridge for every accessory restored from disk cache. */
+  configureAccessory(accessory) {
+    this.accessories.set(accessory.UUID, accessory);
+  }
+
+  discoverDevices() {
+    const sensors = Array.isArray(this.config.sensors) ? this.config.sensors : [];
+    if (!sensors.length) {
+      this.log.warn('No sensors configured — add entries under the "sensors" array.');
+    }
+
+    const activeUuids = new Set();
+
+    for (const device of sensors) {
+      const id = String(
+        device.sensorId || device.localUrl || device.name || 'luftdaten'
+      );
+      const uuid = this.hap.uuid.generate(`${PLUGIN_NAME}:${id}`);
+      activeUuids.add(uuid);
+
+      let accessory = this.accessories.get(uuid);
+      if (!accessory) {
+        const displayName = device.name || 'Luftdaten';
+        accessory = new this.api.platformAccessory(displayName, uuid);
+        accessory.category = this.hap.Categories.SENSOR;
+        accessory.context.device = device;
+        this.log.info(`Adding new sensor: ${displayName}`);
+        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+        this.accessories.set(uuid, accessory);
+      } else {
+        accessory.context.device = device;
+        this.log.info(`Restoring cached sensor: ${accessory.displayName}`);
+      }
+
+      this.handlers.push(new LuftdatenSensor(this, accessory, device));
+    }
+
+    // Remove cached accessories that are no longer in the config.
+    for (const [uuid, accessory] of this.accessories) {
+      if (!activeUuids.has(uuid)) {
+        this.log.info(`Removing sensor no longer configured: ${accessory.displayName}`);
+        this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+        this.accessories.delete(uuid);
+      }
+    }
+  }
+}
+
+/**
+ * Per-sensor handler: wires up the services on one PlatformAccessory and polls
+ * the sensor on an interval.
+ */
+class LuftdatenSensor {
+  constructor(platform, accessory, device) {
+    this.platform = platform;
+    this.log = platform.log;
+    this.api = platform.api;
+    this.hap = platform.hap;
+    this.Service = platform.Service;
+    this.Characteristic = platform.Characteristic;
+    this.accessory = accessory;
+
+    this.name = device.name || 'Luftdaten';
+    this.localUrl = device.localUrl || null;
     this.sensorId =
-      this.config.sensorId !== undefined && this.config.sensorId !== null
-        ? String(this.config.sensorId)
+      device.sensorId !== undefined && device.sensorId !== null
+        ? String(device.sensorId)
         : null;
 
-    this.pollInterval = Math.max(10, Number(this.config.pollInterval) || 120) * 1000;
-    this.requestTimeout =
-      Math.max(1, Number(this.config.requestTimeout) || 10) * 1000;
+    this.pollInterval = Math.max(10, Number(device.pollInterval) || 120) * 1000;
+    this.requestTimeout = Math.max(1, Number(device.requestTimeout) || 10) * 1000;
 
-    // hasTempSensor decides whether temperature + humidity services are added.
+    // hasTempSensor decides whether temperature + humidity services exist.
     // Backward compatible with the old `hasBME280` flag.
-    if (this.config.hasTempSensor !== undefined) {
-      this.hasTempSensor = Boolean(this.config.hasTempSensor);
-    } else if (this.config.hasBME280 !== undefined) {
-      this.hasTempSensor = Boolean(this.config.hasBME280);
+    if (device.hasTempSensor !== undefined) {
+      this.hasTempSensor = Boolean(device.hasTempSensor);
+    } else if (device.hasBME280 !== undefined) {
+      this.hasTempSensor = Boolean(device.hasBME280);
     } else {
       this.hasTempSensor = true;
     }
 
-    // Last known readings (served by onGet handlers between polls).
     this.latest = {
       pm25: null,
       pm10: null,
@@ -165,12 +241,12 @@ class LuftdatenAccessory {
     // Connectivity state — surfaced to HomeKit as StatusActive / "No Response".
     this._failCount = 0;
     this._noResponse = false;
-    this.failThreshold = 3; // consecutive failed polls before marking offline
-    this._lastAq = null; // last logged AirQuality level (for quieter logging)
+    this.failThreshold = 3;
+    this._lastAq = null;
 
     if (!this.localUrl && !this.sensorId) {
       this.log.warn(
-        'Neither "localUrl" nor "sensorId" configured — no data source available.'
+        `[${this.name}] Neither "localUrl" nor "sensorId" configured — no data source.`
       );
     }
 
@@ -180,9 +256,10 @@ class LuftdatenAccessory {
 
   _setupServices() {
     const { Service, Characteristic } = this;
+    const acc = this.accessory;
 
-    // Accessory information.
-    this.informationService = new Service.AccessoryInformation()
+    acc
+      .getService(Service.AccessoryInformation)
       .setCharacteristic(Characteristic.Manufacturer, 'Sensor.Community')
       .setCharacteristic(Characteristic.Model, 'SDS011 + SHT3X/BME280')
       .setCharacteristic(
@@ -191,7 +268,10 @@ class LuftdatenAccessory {
       );
 
     // Air quality.
-    this.airQualityService = new Service.AirQualitySensor(this.name);
+    this.airQualityService =
+      acc.getService(Service.AirQualitySensor) ||
+      acc.addService(Service.AirQualitySensor, this.name);
+    this.airQualityService.setCharacteristic(Characteristic.Name, this.name);
     this.airQualityService
       .getCharacteristic(Characteristic.AirQuality)
       .onGet(() => this._read(() => pm25ToAirQuality(this.latest.pm25)));
@@ -205,12 +285,13 @@ class LuftdatenAccessory {
       .getCharacteristic(Characteristic.StatusActive)
       .onGet(() => !this._noResponse);
 
-    this.services = [this.informationService, this.airQualityService];
-
     if (this.hasTempSensor) {
-      this.temperatureService = new Service.TemperatureSensor(
-        `${this.name} Temp`,
-        'temperature'
+      this.temperatureService =
+        acc.getService(Service.TemperatureSensor) ||
+        acc.addService(Service.TemperatureSensor, `${this.name} Temp`);
+      this.temperatureService.setCharacteristic(
+        Characteristic.Name,
+        `${this.name} Temp`
       );
       this.temperatureService
         .getCharacteristic(Characteristic.CurrentTemperature)
@@ -224,9 +305,12 @@ class LuftdatenAccessory {
         .getCharacteristic(Characteristic.StatusActive)
         .onGet(() => !this._noResponse);
 
-      this.humidityService = new Service.HumiditySensor(
-        `${this.name} Humidity`,
-        'humidity'
+      this.humidityService =
+        acc.getService(Service.HumiditySensor) ||
+        acc.addService(Service.HumiditySensor, `${this.name} Humidity`);
+      this.humidityService.setCharacteristic(
+        Characteristic.Name,
+        `${this.name} Humidity`
       );
       this.humidityService
         .getCharacteristic(Characteristic.CurrentRelativeHumidity)
@@ -238,13 +322,16 @@ class LuftdatenAccessory {
       this.humidityService
         .getCharacteristic(Characteristic.StatusActive)
         .onGet(() => !this._noResponse);
-
-      this.services.push(this.temperatureService, this.humidityService);
+    } else {
+      // hasTempSensor turned off — drop any previously-added services.
+      const temp = acc.getService(Service.TemperatureSensor);
+      if (temp) acc.removeService(temp);
+      const hum = acc.getService(Service.HumiditySensor);
+      if (hum) acc.removeService(hum);
     }
   }
 
   _startPolling() {
-    // Kick off immediately, then on the configured interval.
     this.poll();
     this._timer = setInterval(() => this.poll(), this.pollInterval);
     if (this._timer.unref) this._timer.unref();
@@ -313,20 +400,18 @@ class LuftdatenAccessory {
     let raw = null;
     let source = null;
 
-    // 1. Local read — priority.
     if (this.localUrl) {
       try {
         raw = await this._fetchJson(this.localUrl);
         source = 'local';
       } catch (err) {
         this.log.warn(
-          `Local read failed (${this.localUrl}): ${err.message}` +
+          `[${this.name}] Local read failed (${this.localUrl}): ${err.message}` +
             (this.sensorId ? ' — trying cloud fallback.' : '')
         );
       }
     }
 
-    // 2. Cloud fallback.
     if (!raw && this.sensorId) {
       const cloudUrl = `https://data.sensor.community/airrohr/v1/sensor/${this.sensorId}/`;
       try {
@@ -335,7 +420,9 @@ class LuftdatenAccessory {
         raw = Array.isArray(data) ? data[data.length - 1] : data;
         source = 'cloud';
       } catch (err) {
-        this.log.warn(`Cloud read failed (sensor ${this.sensorId}): ${err.message}`);
+        this.log.warn(
+          `[${this.name}] Cloud read failed (sensor ${this.sensorId}): ${err.message}`
+        );
       }
     }
 
@@ -345,18 +432,18 @@ class LuftdatenAccessory {
         this._noResponse = true;
         this._markNoResponse();
         this.log.warn(
-          `No sensor data after ${this._failCount} attempts — marking "No Response" in HomeKit.`
+          `[${this.name}] No data after ${this._failCount} attempts — marking "No Response".`
         );
       } else {
         this.log.warn(
-          `No sensor data this cycle (attempt ${this._failCount}/${this.failThreshold}).`
+          `[${this.name}] No sensor data this cycle (attempt ${this._failCount}/${this.failThreshold}).`
         );
       }
       return;
     }
 
     if (this._noResponse) {
-      this.log.info('Sensor reachable again — clearing "No Response".');
+      this.log.info(`[${this.name}] Sensor reachable again — clearing "No Response".`);
     }
     this._failCount = 0;
     this._noResponse = false;
@@ -413,9 +500,8 @@ class LuftdatenAccessory {
     }
     parts.push(`airQuality=${aq}`);
 
-    // Log routine reads at debug level; surface only AirQuality changes at info
-    // level to keep the Homebridge log quiet during normal operation.
-    const message = `[${source}] ${parts.join(' ')}`;
+    // Routine reads at debug level; surface only AirQuality changes at info level.
+    const message = `[${this.name}] [${source}] ${parts.join(' ')}`;
     if (aq !== this._lastAq) {
       this.log.info(message);
       this._lastAq = aq;
@@ -423,20 +509,10 @@ class LuftdatenAccessory {
       this.log.debug(message);
     }
   }
-
-  getServices() {
-    return this.services;
-  }
-}
-
-function fmt(value) {
-  return value === null || value === undefined || Number.isNaN(value)
-    ? 'n/a'
-    : value;
 }
 
 module.exports = (api) => {
-  api.registerAccessory(PLUGIN_NAME, ACCESSORY_NAME, LuftdatenAccessory);
+  api.registerPlatform(PLUGIN_NAME, PLATFORM_NAME, LuftdatenPlatform);
 };
 
 // Exposed for unit tests (does not affect Homebridge registration).
@@ -444,4 +520,5 @@ module.exports.parseSensorData = parseSensorData;
 module.exports.pm25ToAirQuality = pm25ToAirQuality;
 module.exports.clampDensity = clampDensity;
 module.exports.AIR_QUALITY = AIR_QUALITY;
-module.exports.LuftdatenAccessory = LuftdatenAccessory;
+module.exports.LuftdatenPlatform = LuftdatenPlatform;
+module.exports.LuftdatenSensor = LuftdatenSensor;

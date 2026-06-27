@@ -101,19 +101,25 @@ in the fields, or edit the raw JSON in the **Config** tab.
 
 ### Manually
 
-Add an entry to the `accessories` array in `config.json`:
+Add a platform block to `config.json` with one entry per sensor in the `sensors`
+array:
 
 ```json
 {
-  "accessories": [
+  "platforms": [
     {
-      "accessory": "Luftdaten",
-      "name": "Living Room Air",
-      "localUrl": "http://192.168.1.50/data.json",
-      "sensorId": "12345",
-      "pollInterval": 120,
-      "requestTimeout": 10,
-      "hasTempSensor": true
+      "platform": "Luftdaten",
+      "name": "Luftdaten",
+      "sensors": [
+        {
+          "name": "Living Room Air",
+          "localUrl": "http://192.168.1.50/data.json",
+          "sensorId": "12345",
+          "pollInterval": 120,
+          "requestTimeout": 10,
+          "hasTempSensor": true
+        }
+      ]
     }
   ]
 }

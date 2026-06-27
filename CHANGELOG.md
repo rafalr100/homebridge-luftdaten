@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-06-27
+
+### Changed (breaking)
+- **Converted from an accessory plugin to a dynamic platform plugin.** This is
+  required for Homebridge verification and enables managing multiple sensors and
+  running as a child bridge.
+- **Config format changed.** Move your old `accessories` entry into a `platforms`
+  block: change `"accessory": "Luftdaten"` to `"platform": "Luftdaten"` and place
+  your sensor settings inside a `sensors` array. See the README for an example.
+
+### Added
+- Support for **multiple sensors** under a single platform block.
+- Accessories are now cached/restored across restarts and removed automatically
+  when taken out of the config.
+- CI now also tests on Node 24.
+
 ## [1.1.0] - 2026-06-27
 
 ### Added
@@ -49,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero runtime dependencies (built-in `fetch`, Node 18+).
 - Unit tests, README with an iOS Home app preview, and an install guide.
 
+[2.0.0]: https://github.com/rafalr100/homebridge-luftdaten/releases/tag/v2.0.0
 [1.1.0]: https://github.com/rafalr100/homebridge-luftdaten/releases/tag/v1.1.0
 [1.0.1]: https://github.com/rafalr100/homebridge-luftdaten/releases/tag/v1.0.1
 [1.0.0]: https://github.com/rafalr100/homebridge-luftdaten/releases/tag/v1.0.0
