@@ -1,20 +1,14 @@
-<h1 align="center">homebridge-luftdaten</h1>
+# homebridge-luftdaten
 
-<p align="center">
-  Bring your <a href="https://sensor.community/">Luftdaten / Sensor.Community</a>
-  air-quality sensor into Apple HomeKit — local-first, with an automatic cloud fallback.
-</p>
+Bring your [Luftdaten / Sensor.Community](https://sensor.community/) air-quality
+sensor into Apple HomeKit — local-first, with an automatic cloud fallback.
 
-<p align="center">
-  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg"></a>
-  <img alt="Node >= 18" src="https://img.shields.io/badge/node-%3E%3D18-339933?logo=node.js&logoColor=white">
-  <img alt="Homebridge >= 1.6" src="https://img.shields.io/badge/homebridge-%3E%3D1.6-491F59?logo=homebridge&logoColor=white">
-  <img alt="Dependencies: none" src="https://img.shields.io/badge/dependencies-none-blue">
-</p>
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+![Node](https://img.shields.io/badge/node-%E2%89%A5%2018-339933.svg)
+![Homebridge](https://img.shields.io/badge/homebridge-%E2%89%A5%201.6-491F59.svg)
+![Dependencies](https://img.shields.io/badge/dependencies-none-blue.svg)
 
-<p align="center">
-  <img src="docs/home-app-preview.svg" alt="How the sensor looks in the iOS Home app" width="720">
-</p>
+![How the sensor looks in the iOS Home app](docs/home-app-preview.svg)
 
 ---
 
