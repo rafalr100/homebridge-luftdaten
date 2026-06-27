@@ -130,6 +130,7 @@ class LuftdatenAccessory {
 
     this.Service = api.hap.Service;
     this.Characteristic = api.hap.Characteristic;
+    this.hap = api.hap;
 
     this.name = this.config.name || ACCESSORY_NAME;
     this.localUrl = this.config.localUrl || null;
@@ -161,6 +162,12 @@ class LuftdatenAccessory {
       pressure: null,
     };
 
+    // Connectivity state — surfaced to HomeKit as StatusActive / "No Response".
+    this._failCount = 0;
+    this._noResponse = false;
+    this.failThreshold = 3; // consecutive failed polls before marking offline
+    this._lastAq = null; // last logged AirQuality level (for quieter logging)
+
     if (!this.localUrl && !this.sensorId) {
       this.log.warn(
         'Neither "localUrl" nor "sensorId" configured — no data source available.'
@@ -187,13 +194,16 @@ class LuftdatenAccessory {
     this.airQualityService = new Service.AirQualitySensor(this.name);
     this.airQualityService
       .getCharacteristic(Characteristic.AirQuality)
-      .onGet(() => pm25ToAirQuality(this.latest.pm25));
+      .onGet(() => this._read(() => pm25ToAirQuality(this.latest.pm25)));
     this.airQualityService
       .getCharacteristic(Characteristic.PM2_5Density)
-      .onGet(() => clampDensity(this.latest.pm25));
+      .onGet(() => this._read(() => clampDensity(this.latest.pm25)));
     this.airQualityService
       .getCharacteristic(Characteristic.PM10Density)
-      .onGet(() => clampDensity(this.latest.pm10));
+      .onGet(() => this._read(() => clampDensity(this.latest.pm10)));
+    this.airQualityService
+      .getCharacteristic(Characteristic.StatusActive)
+      .onGet(() => !this._noResponse);
 
     this.services = [this.informationService, this.airQualityService];
 
@@ -206,8 +216,13 @@ class LuftdatenAccessory {
         .getCharacteristic(Characteristic.CurrentTemperature)
         .setProps({ minValue: -50, maxValue: 100 })
         .onGet(() =>
-          this.latest.temperature === null ? 0 : this.latest.temperature
+          this._read(() =>
+            this.latest.temperature === null ? 0 : this.latest.temperature
+          )
         );
+      this.temperatureService
+        .getCharacteristic(Characteristic.StatusActive)
+        .onGet(() => !this._noResponse);
 
       this.humidityService = new Service.HumiditySensor(
         `${this.name} Humidity`,
@@ -215,7 +230,14 @@ class LuftdatenAccessory {
       );
       this.humidityService
         .getCharacteristic(Characteristic.CurrentRelativeHumidity)
-        .onGet(() => (this.latest.humidity === null ? 0 : this.latest.humidity));
+        .onGet(() =>
+          this._read(() =>
+            this.latest.humidity === null ? 0 : this.latest.humidity
+          )
+        );
+      this.humidityService
+        .getCharacteristic(Characteristic.StatusActive)
+        .onGet(() => !this._noResponse);
 
       this.services.push(this.temperatureService, this.humidityService);
     }
@@ -226,6 +248,46 @@ class LuftdatenAccessory {
     this.poll();
     this._timer = setInterval(() => this.poll(), this.pollInterval);
     if (this._timer.unref) this._timer.unref();
+  }
+
+  /**
+   * Wrap an onGet getter: throw a communication error while the sensor is
+   * considered offline, so the Home app shows "No Response" instead of stale data.
+   */
+  _read(getter) {
+    if (this._noResponse) {
+      throw new this.hap.HapStatusError(
+        this.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE
+      );
+    }
+    return getter();
+  }
+
+  _setStatusActive(active) {
+    const C = this.Characteristic;
+    for (const svc of [
+      this.airQualityService,
+      this.temperatureService,
+      this.humidityService,
+    ]) {
+      if (svc) svc.updateCharacteristic(C.StatusActive, active);
+    }
+  }
+
+  /** Push an error value to every reading so HomeKit shows "No Response". */
+  _markNoResponse() {
+    const C = this.Characteristic;
+    const err = new Error('luftdaten: sensor unreachable');
+    this.airQualityService.updateCharacteristic(C.AirQuality, err);
+    this.airQualityService.updateCharacteristic(C.PM2_5Density, err);
+    this.airQualityService.updateCharacteristic(C.PM10Density, err);
+    if (this.temperatureService) {
+      this.temperatureService.updateCharacteristic(C.CurrentTemperature, err);
+    }
+    if (this.humidityService) {
+      this.humidityService.updateCharacteristic(C.CurrentRelativeHumidity, err);
+    }
+    this._setStatusActive(false);
   }
 
   /** Fetch JSON from a URL with an AbortController-based timeout. */
@@ -278,13 +340,31 @@ class LuftdatenAccessory {
     }
 
     if (!raw) {
-      this.log.warn('No sensor data available from any source this cycle.');
+      this._failCount += 1;
+      if (this._failCount >= this.failThreshold && !this._noResponse) {
+        this._noResponse = true;
+        this._markNoResponse();
+        this.log.warn(
+          `No sensor data after ${this._failCount} attempts — marking "No Response" in HomeKit.`
+        );
+      } else {
+        this.log.warn(
+          `No sensor data this cycle (attempt ${this._failCount}/${this.failThreshold}).`
+        );
+      }
       return;
     }
+
+    if (this._noResponse) {
+      this.log.info('Sensor reachable again — clearing "No Response".');
+    }
+    this._failCount = 0;
+    this._noResponse = false;
 
     const parsed = parseSensorData(raw);
     this.latest = parsed;
     this._publish(parsed, source);
+    this._setStatusActive(true);
   }
 
   /** Push parsed readings into the HomeKit characteristics and log them. */
@@ -332,7 +412,16 @@ class LuftdatenAccessory {
       parts.push(`pressure=${fmt(parsed.pressure)}hPa`);
     }
     parts.push(`airQuality=${aq}`);
-    this.log.info(`[${source}] ${parts.join(' ')}`);
+
+    // Log routine reads at debug level; surface only AirQuality changes at info
+    // level to keep the Homebridge log quiet during normal operation.
+    const message = `[${source}] ${parts.join(' ')}`;
+    if (aq !== this._lastAq) {
+      this.log.info(message);
+      this._lastAq = aq;
+    } else {
+      this.log.debug(message);
+    }
   }
 
   getServices() {

@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-06-27
+
+### Added
+- HomeKit now shows **"No Response"** when the sensor is unreachable: after a few
+  consecutive failed polls the readings report a communication error and
+  `StatusActive` is set to `false`. State clears automatically once the sensor
+  responds again.
+- GitHub Actions CI running `node --check` and the test suite on Node 18, 20, 22.
+
+### Changed
+- Quieter logging — routine reads now log at `debug` level; an `info` line is
+  emitted only when the AirQuality level changes.
+
 ## [1.0.1] - 2026-06-27
 
 ### Added
@@ -34,5 +47,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero runtime dependencies (built-in `fetch`, Node 18+).
 - Unit tests, README with an iOS Home app preview, and an install guide.
 
+[1.1.0]: https://github.com/rafalr100/homebridge-luftdaten/releases/tag/v1.1.0
 [1.0.1]: https://github.com/rafalr100/homebridge-luftdaten/releases/tag/v1.0.1
 [1.0.0]: https://github.com/rafalr100/homebridge-luftdaten/releases/tag/v1.0.0

@@ -3,6 +3,7 @@
 Bring your [Luftdaten / Sensor.Community](https://sensor.community/) air-quality
 sensor into Apple HomeKit — local-first, with an automatic cloud fallback.
 
+[![build](https://github.com/rafalr100/homebridge-luftdaten/actions/workflows/build.yml/badge.svg)](https://github.com/rafalr100/homebridge-luftdaten/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 ![Node](https://img.shields.io/badge/node-%E2%89%A5%2018-339933.svg)
 ![Homebridge](https://img.shields.io/badge/homebridge-%E2%89%A5%201.6-491F59.svg)
@@ -29,6 +30,7 @@ and `AbortController` for timeouts.
   PM2.5 and PM10 density.
 - 🌡️ Temperature and humidity (optional, on by default).
 - 🔄 Configurable polling interval and request timeout.
+- 🚦 Surfaces "No Response" in HomeKit when the sensor can't be reached.
 - 📦 No runtime dependencies.
 
 ## Exposed HomeKit services & characteristics
