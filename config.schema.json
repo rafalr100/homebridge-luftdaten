@@ -2,7 +2,7 @@
   "pluginAlias": "Luftdaten",
   "pluginType": "accessory",
   "singular": false,
-  "headerDisplay": "Reads a Luftdaten / Sensor.Community (airrohr) sensor — local-first, with a cloud fallback. Provide a **Local URL** and/or a **Sensor ID** (at least one is required).",
+  "headerDisplay": "<p align=\"center\"><img src=\"https://raw.githubusercontent.com/rafalr100/homebridge-luftdaten/main/docs/icon.png\" width=\"80\" alt=\"homebridge-luftdaten\"></p>\n\nReads a Luftdaten / Sensor.Community (airrohr) sensor — local-first, with a cloud fallback. Provide a **Local URL** and/or a **Sensor ID** (at least one is required).",
   "footerDisplay": "See the [README](https://github.com/rafalr100/homebridge-luftdaten) for details. Pressure is logged but not exposed to HomeKit.",
   "schema": {
     "type": "object",

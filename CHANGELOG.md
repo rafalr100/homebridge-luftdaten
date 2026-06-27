@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `StatusActive` is set to `false`. State clears automatically once the sensor
   responds again.
 - GitHub Actions CI running `node --check` and the test suite on Node 18, 20, 22.
+- Plugin logo, shown in the README and on the plugin's Settings page in the
+  Homebridge UI.
 
 ### Changed
 - Quieter logging — routine reads now log at `debug` level; an `info` line is
