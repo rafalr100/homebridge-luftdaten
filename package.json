@@ -1,6 +1,6 @@
 {
   "name": "homebridge-luftdaten",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Homebridge accessory plugin for Luftdaten / Sensor.Community (airrohr) air quality sensors, with local-first reading and cloud fallback.",
   "main": "src/index.js",
   "scripts": {
