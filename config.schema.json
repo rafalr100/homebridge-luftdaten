@@ -1,0 +1,64 @@
+{
+  "pluginAlias": "Luftdaten",
+  "pluginType": "accessory",
+  "singular": false,
+  "headerDisplay": "Reads a Luftdaten / Sensor.Community (airrohr) sensor — local-first, with a cloud fallback. Provide a **Local URL** and/or a **Sensor ID** (at least one is required).",
+  "footerDisplay": "See the [README](https://github.com/rafalr100/homebridge-luftdaten) for details. Pressure is logged but not exposed to HomeKit.",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "default": "Luftdaten",
+        "required": true,
+        "description": "Name shown in the Home app."
+      },
+      "localUrl": {
+        "title": "Local URL",
+        "type": "string",
+        "format": "uri",
+        "placeholder": "http://192.168.1.50/data.json",
+        "description": "The sensor's local data endpoint. Tried first."
+      },
+      "sensorId": {
+        "title": "Sensor.Community Sensor ID",
+        "type": "string",
+        "placeholder": "12345",
+        "description": "Numeric ID of the SDS011 sensor, used for the cloud fallback when the local read fails."
+      },
+      "pollInterval": {
+        "title": "Poll interval (seconds)",
+        "type": "integer",
+        "default": 120,
+        "minimum": 10,
+        "description": "How often to read the sensor."
+      },
+      "requestTimeout": {
+        "title": "Request timeout (seconds)",
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "description": "Per-request timeout."
+      },
+      "hasTempSensor": {
+        "title": "Has temperature / humidity sensor",
+        "type": "boolean",
+        "default": true,
+        "description": "Add temperature and humidity services (SHT3X / BME280). Turn off for an SDS011-only sensor."
+      }
+    }
+  },
+  "layout": [
+    "name",
+    "localUrl",
+    "sensorId",
+    {
+      "type": "fieldset",
+      "title": "Advanced",
+      "expandable": true,
+      "expanded": false,
+      "items": ["pollInterval", "requestTimeout", "hasTempSensor"]
+    }
+  ]
+}

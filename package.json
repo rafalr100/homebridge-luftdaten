@@ -36,6 +36,7 @@
   "files": [
     "src/",
     "docs/",
+    "config.schema.json",
     "config.sample.json",
     "README.md",
     "INSTALL.md",
