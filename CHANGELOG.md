@@ -8,8 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.2] - 2026-06-28
 
 ### Changed
-- Redesigned the README hero as a realistic iOS Home app screenshot (iPhone
-  mockup with frosted tiles).
+- README hero is now a real iOS Home app screenshot of the plugin's accessory.
 - README images now use absolute URLs so they also render on the npm package
   page; added a social-preview banner and repo polish (badges, "Why this
   plugin?", "Supported hardware", issue/PR templates, CONTRIBUTING).
