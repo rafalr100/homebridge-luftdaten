@@ -1,4 +1,4 @@
-<img src="docs/icon.png" align="right" width="104" alt="homebridge-luftdaten icon">
+<img src="https://raw.githubusercontent.com/rafalr100/homebridge-luftdaten/main/docs/icon.png" align="right" width="104" alt="homebridge-luftdaten icon">
 
 # homebridge-luftdaten
 
@@ -13,7 +13,9 @@ sensor into Apple HomeKit — local-first, with an automatic cloud fallback.
 ![Homebridge](https://img.shields.io/badge/homebridge-%E2%89%A5%201.6-491F59.svg)
 ![Dependencies](https://img.shields.io/badge/dependencies-none-blue.svg)
 
-![How the sensor looks in the iOS Home app](docs/home-app-preview.svg)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/rafalr100/homebridge-luftdaten/main/docs/home-app-preview.png" alt="The sensor shown in the iOS Home app" width="300">
+</p>
 
 ---
 
