@@ -5,13 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.2] - 2026-06-28
+## [2.0.3] - 2026-06-28
 
 ### Changed
 - README hero is now a real iOS Home app screenshot of the plugin's accessory.
-- README images now use absolute URLs so they also render on the npm package
-  page; added a social-preview banner and repo polish (badges, "Why this
-  plugin?", "Supported hardware", issue/PR templates, CONTRIBUTING).
+- README images use absolute URLs so they also render on the npm package page.
+- Repo polish: social-preview banner, dynamic npm badges, "Why this plugin?"
+  and "Supported hardware" sections, issue/PR templates, and CONTRIBUTING.
 
 ## [2.0.1] - 2026-06-27
 
@@ -80,7 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero runtime dependencies (built-in `fetch`, Node 18+).
 - Unit tests, README with an iOS Home app preview, and an install guide.
 
-[2.0.2]: https://github.com/rafalr100/homebridge-luftdaten/releases/tag/v2.0.2
+[2.0.3]: https://github.com/rafalr100/homebridge-luftdaten/releases/tag/v2.0.3
 [2.0.1]: https://github.com/rafalr100/homebridge-luftdaten/releases/tag/v2.0.1
 [2.0.0]: https://github.com/rafalr100/homebridge-luftdaten/releases/tag/v2.0.0
 [1.1.0]: https://github.com/rafalr100/homebridge-luftdaten/releases/tag/v1.1.0
