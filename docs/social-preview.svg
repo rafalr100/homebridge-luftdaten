@@ -1,0 +1,58 @@
+<svg width="1280" height="1280" viewBox="0 0 1280 1280" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1524"/>
+      <stop offset="1" stop-color="#0b2120"/>
+    </linearGradient>
+    <linearGradient id="iconbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1ec48f"/>
+      <stop offset="1" stop-color="#0c8f93"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#1ec48f" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#1ec48f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1280" height="1280" fill="url(#bg)"/>
+  <circle cx="200" cy="640" r="320" fill="url(#glow)"/>
+
+  <!-- content lives in the centre 1280x640 band (y 320..960) -->
+  <g transform="translate(0,320)">
+    <!-- icon -->
+    <g transform="translate(96,228) scale(0.359)">
+      <rect width="512" height="512" rx="114" fill="url(#iconbg)"/>
+      <g fill="none" stroke="#ffffff" stroke-width="26" stroke-linecap="round">
+        <path d="M120 196 H300 a32 32 0 1 0 -24 -32"/>
+        <path d="M120 256 H352 a32 32 0 1 1 -24 32"/>
+        <path d="M120 316 H286 a28 28 0 1 0 -22 -28"/>
+      </g>
+      <g fill="#ffffff">
+        <circle cx="372" cy="150" r="13" opacity="0.95"/>
+        <circle cx="408" cy="300" r="10" opacity="0.8"/>
+        <circle cx="150" cy="372" r="9" opacity="0.7"/>
+      </g>
+    </g>
+
+    <!-- title + tagline -->
+    <text x="324" y="296" fill="#ffffff" font-size="60" font-weight="700">homebridge-luftdaten</text>
+    <text x="328" y="348" fill="#9fb3c8" font-size="27" font-weight="500">Luftdaten / Sensor.Community air quality → Apple HomeKit</text>
+
+    <!-- feature chips -->
+    <g font-size="22" font-weight="600">
+      <rect x="328" y="392" width="168" height="46" rx="23" fill="#15324a" stroke="#1ec48f" stroke-opacity="0.5"/>
+      <text x="412" y="421" fill="#7ee2bd" text-anchor="middle">Local-first</text>
+
+      <rect x="512" y="392" width="196" height="46" rx="23" fill="#15324a" stroke="#1ec48f" stroke-opacity="0.5"/>
+      <text x="610" y="421" fill="#7ee2bd" text-anchor="middle">Cloud fallback</text>
+
+      <rect x="724" y="392" width="186" height="46" rx="23" fill="#15324a" stroke="#1ec48f" stroke-opacity="0.5"/>
+      <text x="817" y="421" fill="#7ee2bd" text-anchor="middle">PM2.5 / PM10</text>
+
+      <rect x="926" y="392" width="226" height="46" rx="23" fill="#15324a" stroke="#1ec48f" stroke-opacity="0.5"/>
+      <text x="1039" y="421" fill="#7ee2bd" text-anchor="middle">Temp + Humidity</text>
+    </g>
+
+    <text x="328" y="492" fill="#5b7187" font-size="20" font-weight="500">Homebridge plugin · zero dependencies · SDS011 + SHT3X / BME280</text>
+  </g>
+</svg>

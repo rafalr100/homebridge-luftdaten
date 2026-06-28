@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Homebridge Discord
+    url: https://discord.gg/kqNCe2D
+    about: General Homebridge help and community support.
+  - name: Sensor.Community
+    url: https://sensor.community/
+    about: Questions about the sensor hardware/firmware itself.

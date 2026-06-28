@@ -6,8 +6,10 @@ Bring your [Luftdaten / Sensor.Community](https://sensor.community/) air-quality
 sensor into Apple HomeKit — local-first, with an automatic cloud fallback.
 
 [![build](https://github.com/rafalr100/homebridge-luftdaten/actions/workflows/build.yml/badge.svg)](https://github.com/rafalr100/homebridge-luftdaten/actions/workflows/build.yml)
+[![npm version](https://img.shields.io/npm/v/homebridge-luftdaten?logo=npm&color=cb3837)](https://www.npmjs.com/package/homebridge-luftdaten)
+[![npm downloads](https://img.shields.io/npm/dt/homebridge-luftdaten?color=cb3837)](https://www.npmjs.com/package/homebridge-luftdaten)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-![Node](https://img.shields.io/badge/node-%E2%89%A5%2018-339933.svg)
+![Node](https://img.shields.io/node/v/homebridge-luftdaten?color=339933&logo=node.js&logoColor=white)
 ![Homebridge](https://img.shields.io/badge/homebridge-%E2%89%A5%201.6-491F59.svg)
 ![Dependencies](https://img.shields.io/badge/dependencies-none-blue.svg)
 
@@ -37,6 +39,18 @@ and `AbortController` for timeouts.
 - 🚦 Surfaces "No Response" in HomeKit when the sensor can't be reached.
 - 📦 No runtime dependencies.
 
+## Why this plugin?
+
+- **Local-first, not cloud-only.** Reads the sensor's own `data.json` on your LAN
+  and only falls back to the Sensor.Community cloud when the device is
+  unreachable — fast, private, and resilient.
+- **One plugin for the whole device.** Air quality *and* temperature/humidity
+  from a single airrohr sensor, across all firmware `value_type` variants.
+- **Honest offline state.** When the sensor can't be read, HomeKit shows
+  "No Response" instead of stale numbers.
+- **Lightweight.** Zero runtime dependencies — just the built-in `fetch`.
+- **Multiple sensors** under one platform block, with a click-to-configure UI.
+
 ## Exposed HomeKit services & characteristics
 
 | Service | Characteristic | Source | Notes |
@@ -64,6 +78,23 @@ there is no native HomeKit characteristic for barometric pressure.
   `DHT_temperature`, generic `temperature`
 - Humidity: `SHT3X_humidity`, `BME280_humidity`, `DHT_humidity`, generic `humidity`
 - Pressure: `BME280_pressure`, `BMP280_pressure` (÷100 → hPa)
+
+## Supported hardware
+
+Any [Sensor.Community](https://sensor.community/) / Luftdaten station running the
+**airrohr** firmware that serves a `data.json` endpoint and/or publishes to the
+Sensor.Community cloud:
+
+| Component | Role | Notes |
+|---|---|---|
+| **SDS011** (Nova Fitness) | PM2.5 / PM10 | the particulate sensor |
+| **SHT3X** | temperature + humidity | |
+| **BME280** | temperature + humidity + pressure | pressure logged only |
+| **BMP280** | temperature + pressure | no humidity |
+| **DHT22 / DHT11** | temperature + humidity | generic `DHT_*` variants |
+
+Set `hasTempSensor: false` for an SDS011-only station. Pressure is read and
+logged but not exposed to HomeKit (no native characteristic exists).
 
 ## PM2.5 → AirQuality mapping (µg/m³)
 
